@@ -5,9 +5,8 @@
  }else if(request.getSession().getAttribute("adminId") != null){ 
  %>
 
-<%@page import="com.flyaway.dao.Utils"%>
-<%@page import="java.util.ArrayList"%>
-<%@page import="java.util.List"%>
+<%@page import="com.flyaway.model.Admin"%>
+<%@page import="com.flyaway.dao.AdminDAO"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
 	pageEncoding="ISO-8859-1"%>
 <!doctype html>
@@ -24,14 +23,17 @@
 
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="css/bootstrap.min.css">
-<link rel="stylesheet" href="css/login.css">
+<link rel="stylesheet" href="css/register.css">
 
 <title>Fly Away</title>
 
 </head>
+
 <body>
+
 	<!-- header -->
 	<header class="d-flex align-items-center">
+
 		<!-- navbar -->
 		<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
 			<a class="navbar-brand" href="admindetails.jsp"><i
@@ -58,57 +60,58 @@
 		<!-- Navigation -->
 	</header>
 	<!--Header-->
-	<% 
-String flightNumber = (String)session.getAttribute("flightnumber");
-List<String>classList = Utils.getClasses();
-%>
 
+	<%
+
+AdminDAO admin = new AdminDAO();
+Admin adm = null;
+Integer adminId = (Integer)session.getAttribute("adminId");
+if(adminId != null){
+	
+	adm = admin.getAdmin(adminId);
+	
+}
+
+%>
 
 	<div class="container-fluid">
 
 		<div class="row justify-content-center">
 
 			<div class="col-12 col-md-6 col-sm-6">
-				<form class="form-container" id="fare-form"
+
+				<form class="form-container" id="password-form"
 					style="background: rgba(255, 255, 255, 0.8)"
-					action="addfaredetails" method="post">
+					action="adminupdatepassword" method="post">
 					<h3
-						class="text-center py-4 text-dark banner-heading font-weight-bold">Add
-						Fare Details</h3>
+						class="text-center py-4 text-dark banner-heading font-weight-bold">Update
+						Password Form</h3>
 
 					<div class="form-group has-feedback">
-						<label for="flightId" class="text-dark font-weight-bold">Flight
-							Number</label> <input name="flightnumber" type="text"
-							class="form-control" id="flightId" value=<%= flightNumber %>
+						<label for="customer-id" class="text-dark font-weight-bold">Admin
+							Id</label> <input name="customerid" type="text" class="form-control"
+							id="customer-id" value=<%= adm.getAdminId() %> readonly />
+						<div class="invalid-feedback font-weight-bold" id="uError"></div>
+					</div>
+
+					<div class="form-group has-feedback">
+						<label for="email-id" class="text-dark font-weight-bold">Email
+							Address</label> <input name="emailaddress" type="email"
+							class="form-control" id="email-id" value=<%= adm.getEmail() %>
 							readonly />
-						<div class="invalid-feedback font-weight-bold" id="fError"></div>
+						<div class="invalid-feedback font-weight-bold" id="eError"></div>
 					</div>
 
-					<div class="form-group has-feedback">
-						<label for="travelClass" class="text-dark font-weight-bold">Travel
-							Class</label> <select class="form-control" id="travelClass"
-							name="travelclass">
-							<option selected value="selected">Select</option>
-							<% 
-        		if(classList.size() != 0){
-        			for(String code: classList){
-        		%>
-							<option value=<%= code %>><%= code %></option>
-							<% } }%>
-						</select>
-						<div class="invalid-feedback font-weight-bold" id="s1Error"></div>
+					<div class="form-group mb-3 has-feedback">
+						<label for="inputPassword4" class="text-dark font-weight-bold">New
+							Password</label> <input name="password" type="password"
+							class="form-control" id="inputPassword4"
+							placeholder="Enter New Password">
+						<div class="invalid-feedback font-weight-bold" id="pError"></div>
 					</div>
-
-					<div class="form-group has-feedback">
-						<label for="Fare" class="text-dark font-weight-bold">Class
-							Fare</label> <input name="fare" type="number" class="form-control "
-							placeholder="Enter Class Fare" id="Fare" min=1 />
-						<div class="invalid-feedback font-weight-bold" id="tError"></div>
-					</div>
-
 
 					<button type="button" class="btn btn-primary btn-block "
-						id="farebtn">Add Fare</button>
+						id="passbtn">Change Password</button>
 
 				</form>
 			</div>
@@ -153,87 +156,68 @@ List<String>classList = Utils.getClasses();
 	<script src="js/bootstrap.min.js"></script>
 	<script src="https://use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
 	<script>
-  
-  let sel1Error = '';
+//Password Validation  ==============================================================================
 
-  function validateSelect(id) {
-    if (isEmptySelect(id)) {
-      document.getElementById('s1Error').textContent = sel1Error;
+  let passError = '';
+
+  function validatePassword(id) {
+    if (isEmptyPassword(id)) {
+      document.getElementById('pError').textContent = passError;
       return false;
-    }else {
+    } else if (regexValidateP(id)) {
+      document.getElementById('pError').textContent = passError;
+      return false;
+    } else {
       document.getElementById(id).classList.remove('is-invalid');
-      document.getElementById('s1Error').remove;
+      document.getElementById('pError').remove;
       return true;
     }
   }
 
-  function isEmptySelect(id) {
+  function isEmptyPassword(id) {
     let element = document.getElementById(id);
-    if (element.value === 'selected') {
+    if (element.value == null || element.value == "" || element.value.trim() == "") {
       element.classList.add('is-invalid');
-      sel1Error = `Please Select an Option`;
+      passError = `Passoword cannot be empty`;
       return true;
     } else {
       return false;
     }
   }
 
-  // Fare Validation
-  
-  let numError = '';
-
-  function validateFare(id) {
-    if (checkNum(id)) {
-      document.getElementById('tError').textContent = numError;
+  function regexValidateP(id) {
+    var alphaExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/;
+    let element = document.getElementById(id);
+    if (alphaExp.test(element.value)) {
       return false;
-    }else if (checkNegNumAndZero(id)){
-   	 document.getElementById('tError').textContent = numError;
-        return false; 
-    }else {
-      document.getElementById(id).classList.remove('is-invalid');
-      document.getElementById('tError').remove;
+    } else {
+      element.classList.add('is-invalid');
+      passError =
+        `Must contain at least one number and one uppercase and lowercase letter and one special character, and at least 8 or more characters`;
       return true;
     }
   }
- 
-  function checkNum(id) {
-	     let element = document.getElementById(id);
-	     if (isNaN(element.value)) {
-	       element.classList.add('is-invalid');
-	       numError = `Please provide a Number`;
-	       return true;
-	     } else {
-	       return false;
-	     }
-	   }  
- 
-  function checkNegNumAndZero(id) {
-	     let element = document.getElementById(id);
-	     if (element.value <= 0) {
-	       element.classList.add('is-invalid');
-	       numError = `Fare should be a non-zero positive number`;
-	       return true;
-	     } else {
-	       return false;
-	     }
-	   }  
 
- 
+
+  //Password Validation Ends ==============================================================================
+
+
+	  $(document).ready(
+
+    function () {
+
+      $("#passbtn").click(function () {
+        if (validatePassword('inputPassword4')) {
+          $("form#password-form").submit();
+        }
+      });
+    });
   
-  $(document).ready(
-
-		    function () {
-
-		      $("#farebtn").click(function () {
-		        if (
-		        		validateSelect('travelClass') &&
-		        		validateFare('Fare')) {
-		          $("form#fare-form").submit();
-		        }
-		      });
-		    });
- 
   </script>
+
+
+
+
 
 </body>
 </html>
